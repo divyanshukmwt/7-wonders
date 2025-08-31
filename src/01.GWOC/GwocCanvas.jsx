@@ -20,6 +20,8 @@ const GwocCanvas = () => {
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
 
+        // Set initial opacity to 0 for fade-in
+        gsap.set(canvas, { opacity: 0 });
 
         const setCanvasSize = () => {
             const pixelRatio = window.devicePixelRatio || 1;
@@ -42,6 +44,9 @@ const GwocCanvas = () => {
             imagesToLoad--;
 
             if (!imagesToLoad) {
+                // Fade in the canvas once all frames are loaded
+                gsap.to(canvas, { opacity: 1, duration: 0.5, ease: "power2.out" });
+
                 render();
                 setupScrollTrigger();
             }
@@ -103,7 +108,6 @@ const GwocCanvas = () => {
                 },
             });
         };
-
 
     }, []);
 

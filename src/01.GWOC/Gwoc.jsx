@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import GwocBG from './GwocBG.png';
 import GwocF from './GwocF.png';
 
@@ -12,9 +12,12 @@ const Gwoc = () => {
   const fgRef = useRef(null);
   const textRef = useRef(null);
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Scroll-triggered parallax for images and text
+    // Scroll-based parallax
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: containerRef.current,
@@ -32,6 +35,19 @@ const Gwoc = () => {
       ScrollTrigger.getAll().forEach(st => st.kill());
     };
   }, []);
+
+  // Click handler
+  const handleEnter = () => {
+    const tl = gsap.timeline({
+      onComplete: () => {
+        navigate("/gwoccanvas"); // navigate after animation
+      }
+    });
+
+    tl.to(textRef.current, { y: "+=200", duration: 0.8, ease: "power2.inOut" }) // move text down
+      .to(buttonRef.current, { opacity: 0, duration: 0.5, ease: "power2.out" }, "<")
+      .to(containerRef.current,{opacity:0, duration:0.5, ease : "power2.out"}); // fade button simultaneously
+  };
 
   return (
     <div ref={containerRef} className='w-full h-screen overflow-hidden relative'>
@@ -59,12 +75,13 @@ const Gwoc = () => {
       />
 
       {/* Fixed Navigation Button */}
-      <Link
-        to="/gwoccanvas"
+      <button
+        ref={buttonRef}
+        onClick={handleEnter}
         className="absolute z-50 bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black font-bold rounded-lg shadow-lg hover:bg-gray-200 transition"
       >
-        Enter Canvas
-      </Link>
+        Enter Experience
+      </button>
     </div>
   );
 };
