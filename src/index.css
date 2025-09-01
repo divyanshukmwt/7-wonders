@@ -11,3 +11,15 @@ html, body {
     font-family: main;
     src: url("./Fonts/BiggerDisplay.otf");
 }
+@font-face {
+  font-family: montserrat;
+  src: url("./Fonts/Montserrat-Regular.ttf");
+}
+@font-face {
+  font-family: nunito;
+  src: url("./Fonts/Nunito-Regular.ttf");
+}
+@font-face {
+  font-family: raleway;
+  src: url("./Fonts/Raleway-Regular.ttf");
+}

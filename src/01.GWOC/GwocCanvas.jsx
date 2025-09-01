@@ -3,9 +3,9 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
 gsap.registerPlugin(ScrollTrigger);
-import img1 from './1.png';
-import img2 from './2.png';
-import img3 from './3.png';
+import img1 from './slide1.webp';
+import img2 from './slide2.webp';
+import img3 from './slide3.webp';
 
 const GwocCanvas = () => {
   const canvasRef = useRef(null);
@@ -15,13 +15,31 @@ const GwocCanvas = () => {
   const grandchild1Ref = useRef(null);
   const grandchild2Ref = useRef(null);
   const grandchild3Ref = useRef(null);
+  const textWrapperRef = useRef(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselIndexRef = useRef(0);
+  const prevProgressRef = useRef(0); // Track previous scroll progress
 
-  const slides = [
-    img1, img2, img3
-  ];
+  const slides = [img1, img2, img3];
+
+  // Animate text on slide change with direction
+  const animateText = (direction = "forward") => {
+    if (!textWrapperRef.current) return;
+    const fromX = direction === "forward" ? 200 : -200;
+    const toX = 0;
+    const tl = gsap.timeline();
+    tl.to(textWrapperRef.current, {
+      x: direction === "forward" ? -200 : 200,
+      opacity: 0,
+      duration: 0.3,
+      ease: "power2.in",
+    }).fromTo(
+      textWrapperRef.current,
+      { x: fromX, opacity: 0 },
+      { x: toX, opacity: 1, duration: 0.5, ease: "power2.out" }
+    );
+  };
 
   useEffect(() => {
     const lenis = new Lenis();
@@ -46,8 +64,6 @@ const GwocCanvas = () => {
     window.addEventListener("resize", setCanvasSize);
 
     gsap.set(canvas, { opacity: 0 });
-
-    // <-- NEW: Set initial hidden/offscreen state for overlay children
     gsap.set([grandchild1Ref.current, grandchild2Ref.current, grandchild3Ref.current], {
       opacity: 0,
       y: (i, target) => (target === grandchild1Ref.current ? -100 : 0),
@@ -114,6 +130,8 @@ const GwocCanvas = () => {
       scrub: 1,
       onUpdate: (self) => {
         const progress = self.progress;
+        const direction = progress > prevProgressRef.current ? "forward" : "backward";
+        prevProgressRef.current = progress;
 
         const animationProgress = Math.min(progress / 0.9, 1);
         const targetFrame = Math.round(animationProgress * (frameCount - 1));
@@ -132,7 +150,6 @@ const GwocCanvas = () => {
         }
 
         if (overlayOpacity >= 1 && overlayRef.current) {
-          // run entrance animations only once
           if (!overlayRef.current.dataset.animated) {
             overlayRef.current.dataset.animated = "true";
             const tl = gsap.timeline();
@@ -163,6 +180,7 @@ const GwocCanvas = () => {
           );
           if (carouselIndexRef.current !== slideIndex) {
             carouselIndexRef.current = slideIndex;
+            animateText(direction); // Animate text with scroll direction
             setCurrentSlide(slideIndex);
           }
         }
@@ -177,7 +195,7 @@ const GwocCanvas = () => {
       });
       try {
         if (typeof lenis.destroy === "function") lenis.destroy();
-      } catch (e) {}
+      } catch (e) { }
       window.removeEventListener("resize", setCanvasSize);
     };
   }, []);
@@ -189,59 +207,85 @@ const GwocCanvas = () => {
       <div
         ref={overlayRef}
         className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white text-3xl"
-        style={{
-          opacity: 0,
-          backgroundColor: "rgba(0,0,0,0.2)",
-        }}
+        style={{ opacity: 0, backgroundColor: "rgba(0,0,0,0.2)" }}
       >
         <div className="w-full h-full">
           <div className="h-full flex flex-col w-full">
             {/* Grandchild 1 */}
             <div
               ref={grandchild1Ref}
-              className="w-full h-[30%] p-4 flex items-center justify-center"
+              className="w-full h-[30%] p-4 font-[main] text-[7rem] flex items-center justify-center"
             >
-              Grandchild1
+              THE GREAT WALL OF CHINA
             </div>
 
             {/* Bottom Section */}
-            <div className="flex w-full h-[70%]">
+            <div className="flex w-full gap-[1vw] h-[50%]">
               {/* Grandchild 2 → Text */}
               <div
                 ref={grandchild2Ref}
-                className="w-[30%] p-4 flex flex-col justify-center text-left text-lg"
+                className="w-[40%] p-4 flex flex-col justify-center text-left text-lg relative overflow-hidden"
               >
-                <h2 className="font-bold text-2xl mb-4">Carousel Info</h2>
-                <p className="mb-2">
-                  {currentSlide === 0 && "This is the first slide description."}
-                  {currentSlide === 1 && "Here is some text for the second slide."}
-                  {currentSlide === 2 && "And this is for the third slide."}
-                </p>
-                <p className="text-sm opacity-80">
-                  Text changes with slides automatically.
-                </p>
+                <div ref={textWrapperRef} className="absolute w-full">
+                  <h2 className="font-bold font-[montserrat] text-2xl mb-4">
+                    {currentSlide === 0 && "The Majestic Great Wall"}
+                    {currentSlide === 1 && "A Journey Through Time"}
+                    {currentSlide === 2 && "A New Wonder of the World"}
+                  </h2>
+                  <p className="mb-2 w-[95%] font-[montserrat]">
+                    {currentSlide === 0 &&
+                      "Stretching over 13,000 miles, the Great Wall of China is a marvel of ancient engineering. Built to protect the Chinese states from invasions, it stands as a symbol of strength, perseverance, and human ingenuity."}
+                    {currentSlide === 1 &&
+                      "Construction began more than 2,000 years ago during the Qin Dynasty and continued over centuries. Made of stone, brick, and earth, it winds through mountains, deserts, and plains, reflecting the dedication and skill of countless workers."}
+                    {currentSlide === 2 &&
+                      "Voted one of the New 7 Wonders of the World, the Great Wall is celebrated for its immense scale, remarkable engineering, and cultural significance. It stands as a timeless symbol of China’s history and resilience."}
+                  </p>
+                </div>
               </div>
 
               {/* Grandchild 3 → Carousel */}
               <div
                 ref={grandchild3Ref}
-                className="w-[70%] p-4 flex items-center justify-center"
+                className="w-[60%] p-4 flex flex-col items-start justify-start"
               >
-                <div className="relative w-full h-full overflow-hidden rounded-2xl shadow-lg">
+                <div className="relative w-full h-full overflow-hidden rounded-l shadow-lg">
                   <div
-                    className="carousel flex w-full h-full transition-transform duration-700 ease-in-out"
-                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                    className="carousel flex transition-transform duration-700 ease-in-out"
+                    style={{
+                      transform: `translateX(-${currentSlide * (window.innerWidth * 0.6 * 0.75 + 16)}px)`,
+                    }}
+                  >
                     {slides.map((src, i) => (
-                      <img
+                      <div
                         key={i}
-                        src={src}
-                        className="w-full h-full object-cover flex-shrink-0"
-                        alt={`Slide ${i + 1}`}
-                      />
+                        className="flex-shrink-0 rounded-l mr-4"
+                        style={{ width: `${60 * 0.75}vw`, height: "100%" }}
+                      >
+                        <img
+                          src={src}
+                          className="w-full h-full object-cover rounded-l"
+                          alt={`Slide ${i + 1}`}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Progress Bar - moved OUTSIDE carousel container */}
+                {/* Custom Progress Bar */}
+                <div className="w-[79%] h-1 bg-white/20 rounded relative mt-5">
+                  {/* Fatter progress line */}
+                  <div
+                    className="absolute left-0 h-1 bg-white/60 rounded-full transition-all duration-300 ease-out"
+                    style={{
+                      width: `${((currentSlide + 1) / slides.length) * 100}%`,
+                    }}
+                  ></div>
+                </div>
+
               </div>
+
+
             </div>
           </div>
         </div>
