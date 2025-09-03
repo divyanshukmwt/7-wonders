@@ -51,7 +51,7 @@ const Gwoc = () => {
   };
 
   return (
-    <div ref={containerRef} className="w-full h-screen overflow-hidden relative">
+    <div ref={containerRef} className="w-full h-screen z-40 overflow-hidden relative">
       {/* Background */}
       <img
         className="w-full h-full object-cover absolute top-0 left-0 z-10 min-h-screen"
