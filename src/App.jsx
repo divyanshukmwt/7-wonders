@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Gwoc from './01.GWOC/Gwoc';
 import GwocCanvas from './01.GWOC/GwocCanvas';
+import Tajmahal from './02.TAJMAHAL/Tajmahal';
+import TajMahalCanvas from './02.TAJMAHAL/TajMahalCanvas';
 import Lenis from '@studio-freight/lenis';
 
 const App = () => {
@@ -23,8 +25,17 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Gwoc />} />
+        <Route
+          path="/"
+          element={
+            <>
+              <Gwoc />
+              <Tajmahal />
+            </>
+          }
+        />
         <Route path="/gwoccanvas" element={<GwocCanvas />} />
+        <Route path="/tajmahalcanvas" element={<TajMahalCanvas />} />
       </Routes>
     </BrowserRouter>
   );

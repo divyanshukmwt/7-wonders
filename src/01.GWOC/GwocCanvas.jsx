@@ -6,12 +6,12 @@ gsap.registerPlugin(ScrollTrigger);
 import img1 from './slide1.webp';
 import img2 from './slide2.webp';
 import img3 from './slide3.webp';
+import audio from './Goddess of the Mountain by Winky詩 Cover 百鬼 IBUKI.mp3';
 
 const GwocCanvas = () => {
   const canvasRef = useRef(null);
   const heroRef = useRef(null);
   const overlayRef = useRef(null);
-
   const grandchild1Ref = useRef(null);
   const grandchild2Ref = useRef(null);
   const grandchild3Ref = useRef(null);
@@ -19,11 +19,40 @@ const GwocCanvas = () => {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const carouselIndexRef = useRef(0);
-  const prevProgressRef = useRef(0); // Track previous scroll progress
+  const prevProgressRef = useRef(0);
+  const [showClickText, setShowClickText] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const slides = [img1, img2, img3];
+  const audioRef = useRef(new Audio(audio));
 
-  // Animate text on slide change with direction
+  // Mouse move listener
+  useEffect(() => {
+    const handleMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Play audio on first click anywhere (only if audioEnabled)
+  useEffect(() => {
+    const handleWindowClick = () => {
+      if (showClickText && audioEnabled) {
+        audioRef.current.play();
+        gsap.to(".click-sound-text", {
+          opacity: 0,
+          duration: 0.5,
+          onComplete: () => setShowClickText(false),
+        });
+        setAudioEnabled(false);
+        window.removeEventListener("click", handleWindowClick);
+      }
+    };
+    window.addEventListener("click", handleWindowClick);
+    return () => window.removeEventListener("click", handleWindowClick);
+  }, [showClickText, audioEnabled]);
+
+  // Animate text on slide change
   const animateText = (direction = "forward") => {
     if (!textWrapperRef.current) return;
     const fromX = direction === "forward" ? 200 : -200;
@@ -44,9 +73,7 @@ const GwocCanvas = () => {
   useEffect(() => {
     const lenis = new Lenis();
     lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
 
     const canvas = canvasRef.current;
@@ -141,10 +168,15 @@ const GwocCanvas = () => {
         const fadeStart = 0.4;
         const fadeDuration = 0.2;
         const fadeEnd = fadeStart + fadeDuration;
-        const overlayOpacity = Math.min(
-          Math.max((progress - fadeStart) / fadeDuration, 0),
-          1
-        );
+        const overlayOpacity = Math.min(Math.max((progress - fadeStart) / fadeDuration, 0), 1);
+
+        if (overlayOpacity > 0 && showClickText) {
+          // Fade out click text and disable audio
+          gsap.to(".click-sound-text", { opacity: 0, duration: 0.5 });
+          setShowClickText(false);
+          setAudioEnabled(false);
+        }
+
         if (overlayRef.current) {
           overlayRef.current.style.opacity = overlayOpacity;
         }
@@ -174,13 +206,10 @@ const GwocCanvas = () => {
 
           const normalized = (progress - fadeEnd) / (1 - fadeEnd);
           const clamped = Math.max(0, Math.min(1, normalized || 0));
-          let slideIndex = Math.min(
-            Math.floor(clamped * slides.length),
-            slides.length - 1
-          );
+          let slideIndex = Math.min(Math.floor(clamped * slides.length), slides.length - 1);
           if (carouselIndexRef.current !== slideIndex) {
             carouselIndexRef.current = slideIndex;
-            animateText(direction); // Animate text with scroll direction
+            animateText(direction);
             setCurrentSlide(slideIndex);
           }
         }
@@ -190,12 +219,8 @@ const GwocCanvas = () => {
     return () => {
       st.kill();
       ScrollTrigger.getAll().forEach((s) => s.kill());
-      gsap.ticker.remove((time) => {
-        lenis.raf(time * 1000);
-      });
-      try {
-        if (typeof lenis.destroy === "function") lenis.destroy();
-      } catch (e) { }
+      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      try { if (typeof lenis.destroy === "function") lenis.destroy(); } catch (e) { }
       window.removeEventListener("resize", setCanvasSize);
     };
   }, []);
@@ -204,6 +229,22 @@ const GwocCanvas = () => {
     <div className="w-full h-screen relative" ref={heroRef}>
       <canvas ref={canvasRef} className="h-full w-full" />
 
+      {/* Mouse-follow click text */}
+      {showClickText && (
+        <div
+          className="click-sound-text fixed pointer-events-none z-50 text-white mix-blend-difference px-3 py-1 rounded select-none"
+          style={{
+            top: mousePos.y + "px",
+            left: mousePos.x + 10 + "px",
+            cursor: "default",
+            opacity: 1,
+          }}
+        >
+          Click for Sound
+        </div>
+      )}
+
+      {/* Overlay */}
       <div
         ref={overlayRef}
         className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white text-3xl"
@@ -252,7 +293,8 @@ const GwocCanvas = () => {
                   <div
                     className="carousel flex transition-transform duration-700 ease-in-out"
                     style={{
-                      transform: `translateX(-${currentSlide * (window.innerWidth * 0.6 * 0.75 + 16)}px)`,
+                      transform: `translateX(-${currentSlide * (window.innerWidth * 0.6 * 0.75 + 16)
+                        }px)`,
                     }}
                   >
                     {slides.map((src, i) => (
@@ -270,11 +312,8 @@ const GwocCanvas = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Progress Bar - moved OUTSIDE carousel container */}
-                {/* Custom Progress Bar */}
+                {/* Progress Bar */}
                 <div className="w-[79%] h-1 bg-white/20 rounded relative mt-5">
-                  {/* Fatter progress line */}
                   <div
                     className="absolute left-0 h-1 bg-white/60 rounded-full transition-all duration-300 ease-out"
                     style={{
@@ -282,10 +321,7 @@ const GwocCanvas = () => {
                     }}
                   ></div>
                 </div>
-
               </div>
-
-
             </div>
           </div>
         </div>
@@ -295,3 +331,4 @@ const GwocCanvas = () => {
 };
 
 export default GwocCanvas;
+
