@@ -102,7 +102,7 @@ gsap.fromTo(
   return (
     <div
       ref={containerRef}
-      className="w-full z-50 h-screen bg-[#ccd7cf] overflow-hidden relative"
+      className="w-full z-40 h-screen overflow-hidden relative"
     >
       {/* Background 2 (sky) */}
       <img
@@ -115,7 +115,7 @@ gsap.fromTo(
       {/* Background 1 (middle building part) */}
       <img
         ref={bg1Ref}
-        className="absolute z-40 h-full w-full object-cover"
+        className="absolute z-30 h-full w-full object-cover"
         src={TajMahalBg1}
         alt="bg1"
       />
@@ -123,7 +123,7 @@ gsap.fromTo(
       {/* Foreground (front details) */}
       <img
         ref={fgRef}
-        className="absolute z-30 h-full w-full object-cover"
+        className="absolute z-20 h-full w-full object-cover"
         src={TajMahalF}
         alt="fg"
       />
